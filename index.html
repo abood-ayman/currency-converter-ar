@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>محول العملات بسعر تدخله بنفسك | أداة مجانية</title>
+<meta name="description" content="حوّل بين أي عملتين بسعر الصرف الذي تدخله أنت من البنك أو السوق، في الاتجاهين معًا، مع جدول مبالغ جاهزة. دون إرسال أي بيانات.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Tahoma,'Segoe UI',Arial,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.7;min-height:100vh;display:flex;flex-direction:column}
+header{background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;padding:1.6rem 1rem;text-align:center}
+header h1{font-size:1.5rem}
+.tagline{opacity:.92;font-size:.95rem;margin-top:.25rem}
+main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:1rem}
+.card{background:#fff;border-radius:14px;padding:1.25rem;box-shadow:0 1px 4px rgba(15,23,42,.08);margin-bottom:1rem}
+.card h2{font-size:1.1rem;margin-bottom:.4rem;color:#0f766e}
+label{display:block;font-weight:700;margin:.75rem 0 .3rem}
+input,select,textarea{width:100%;padding:.7rem .8rem;border:1.5px solid #cbd5e1;border-radius:10px;font-size:1rem;font-family:inherit;background:#fff;color:#1e293b}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(20,184,166,.18)}
+.row{display:flex;gap:.6rem}
+.row>*{flex:1;min-width:0}
+button{display:inline-block;width:100%;padding:.8rem;border:0;border-radius:10px;background:#0f766e;color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;margin-top:1rem}
+button:hover{background:#115e59}
+button.ghost{background:#e2e8f0;color:#1e293b}
+.result{background:#ecfdf5;border:1.5px solid #6ee7b7;border-radius:10px;padding:1rem;margin-top:1rem;font-size:1.05rem;word-break:break-word}
+.result b{color:#047857}
+.result.warn{background:#fffbeb;border-color:#fcd34d}
+.result.warn b{color:#b45309}
+.result.bad{background:#fef2f2;border-color:#fca5a5}
+.result.bad b{color:#b91c1c}
+.muted{color:#64748b;font-size:.85rem}
+footer{background:#0f172a;color:#94a3b8;text-align:center;padding:1.2rem 1rem;font-size:.85rem;line-height:1.9}
+footer a{color:#5eead4}
+table{width:100%;border-collapse:collapse;margin-top:.5rem}
+th,td{padding:.5rem;border-bottom:1px solid #e2e8f0;text-align:right;font-size:.95rem}
+.big{font-size:1.6rem;font-weight:800}
+.hidden{display:none}
+.chk{display:flex;align-items:center;gap:.5rem;margin:.3rem 0}
+.chk input{width:auto}
+
+</style>
+</head>
+<body>
+<header>
+<h1>محول العملات</h1>
+<p class="tagline">حوّل بين أي عملتين بسعر الصرف اللي تحدده بنفسك</p>
+</header>
+<main>
+<div class="card">
+<h2>سعر الصرف</h2>
+<div class="row">
+<div>
+<label for="cur1">من عملة</label>
+<input type="text" id="cur1" value="دولار" maxlength="12">
+</div>
+<div>
+<label for="cur2">إلى عملة</label>
+<input type="text" id="cur2" value="جنيه" maxlength="12">
+</div>
+</div>
+<label for="rate">سعر الوحدة: ١ <span id="c1label">دولار</span> = كم <span id="c2label">جنيه</span>؟</label>
+<input type="number" inputmode="decimal" id="rate" min="0" placeholder="مثال: 50.5">
+<button onclick="calc()">احسب</button>
+</div>
+<div class="card">
+<h2>التحويل</h2>
+<label for="amount1">المبلغ بـ<span id="c1label2">دولار</span></label>
+<input type="number" inputmode="decimal" id="amount1" min="0" placeholder="100" oninput="convert(true)">
+<label for="amount2">المبلغ بـ<span id="c2label2">جنيه</span></label>
+<input type="number" inputmode="decimal" id="amount2" min="0" placeholder="5050" oninput="convert(false)">
+<div id="out" class="result hidden"></div>
+</div>
+<div class="card">
+<h2>ملحوظة مهمة</h2>
+<p>الأداة لا تجلب أسعارًا من الإنترنت: أنت تدخل سعر الصرف بنفسك من مصدر تثق فيه (البنك أو السوق)، فتكون النتيجة مبنية على رقم تعرف مصدره. الأسعار تتغير باستمرار، فراجع السعر قبل أي قرار مالي.</p>
+</div>
+
+</main>
+<footer>
+<p>تعمل هذه الأداة بالكامل على جهازك، ولا تُحفظ أو تُرسل أي بيانات إلى أي خادم.</p>
+<p>أداة مجانية مفتوحة المصدر · بُنيت بمساعدة أدوات ذكاء اصطناعي · <a href="https://github.com/abood-ayman/currency-converter-ar">الكود على GitHub</a></p>
+</footer>
+<script>
+window.__jserrors=[];window.addEventListener('error',function(e){window.__jserrors.push(String(e.message))});
+const g = id => document.getElementById(id);
+const num = id => { const v = parseFloat(g(id).value); return isNaN(v) ? 0 : v; };
+const fmt = x => x.toLocaleString('ar-EG', { maximumFractionDigits: 2 });
+
+function labels() {
+  const c1 = g('cur1').value.trim() || 'عملة ١';
+  const c2 = g('cur2').value.trim() || 'عملة ٢';
+  for (const id of ['c1label', 'c1label2']) g(id).textContent = c1;
+  for (const id of ['c2label', 'c2label2']) g(id).textContent = c2;
+  return [c1, c2];
+}
+
+function rate() { return num('rate'); }
+
+function convert(fromFirst) {
+  const r = rate();
+  if (r <= 0) return;
+  if (fromFirst) {
+    const a = num('amount1');
+    g('amount2').value = a > 0 ? +(a * r).toFixed(2) : '';
+  } else {
+    const a = num('amount2');
+    g('amount1').value = a > 0 ? +(a / r).toFixed(2) : '';
+  }
+}
+
+function table(r) {
+  const amounts = [1, 5, 10, 50, 100, 500, 1000];
+  let h = '<ul>';
+  for (const a of amounts) h += '<li>' + fmt(a) + ' = <b>' + fmt(a * r) + '</b></li>';
+  return h + '</ul>';
+}
+
+function calc() {
+  labels();
+  const r = rate();
+  const el = g('out');
+  el.classList.remove('hidden');
+  if (r <= 0) { el.innerHTML = '<p>أدخل سعر صرف صحيحًا أكبر من صفر.</p>'; return; }
+  const [c1, c2] = labels();
+  el.innerHTML = '<p class="big">١ ' + c1 + ' = <b>' + fmt(r) + ' ' + c2 + '</b></p>' +
+                 '<p>١ ' + c2 + ' = <b>' + fmt(1 / r) + ' ' + c1 + '</b></p>' +
+                 '<p class="muted">جدول سريع (' + c1 + ' → ' + c2 + '):</p>' + table(r);
+}
+
+window.__test = function () {
+  g('rate').value = 50;
+  g('amount1').value = 100; convert(true);
+  const a = parseFloat(g('amount2').value) === 5000;
+  g('amount2').value = 250; convert(false);
+  const b = parseFloat(g('amount1').value) === 5;
+  return { pass: a && b, details: { a, b } };
+};
+
+window.__demo = function () {
+  g('rate').value = 50.5;
+  g('amount1').value = 100;
+  calc();
+  convert(true);
+};
+
+g('cur1').addEventListener('input', labels);
+g('cur2').addEventListener('input', labels);
+
+</script>
+</body>
+</html>
